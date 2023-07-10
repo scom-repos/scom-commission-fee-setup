@@ -1,0 +1,27 @@
+{
+  "name": "@scom/scom-commission-fee-setup",
+  "version": "0.1.10",
+  "main": "dist/index.js",
+  "plugin": "dist",
+  "pluginTypes": "pluginTypes/index.d.ts",
+  "types": "types/index.d.ts",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@ijstech/components": "^0.1.29",
+    "@ijstech/eth-wallet": "^0.1.51",
+    "@ijstech/eth-contract": "^0.1.10",
+    "@scom/scom-network-picker": "^0.1.1",
+    "@scom/scom-network-list": "^0.1.0"
+  },
+  "devDependencies": {
+    "@ijstech/cli": "^0.1.26",
+    "@ijstech/compiler": "^0.1.22"
+  },
+  "scripts": {
+    "build": "rm -rf dist && npx @ijstech/compiler",
+    "serve": "npx @ijstech/cli serve 8080",
+    "test": "cd test && npm run test && cd .."
+  }
+}
