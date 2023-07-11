@@ -16,10 +16,10 @@ import {
   Container
 } from '@ijstech/components';
 import {} from '@ijstech/eth-contract';
-import { ICommissionInfo } from './interface';
+import { ICommissionInfo, INetworkConfig } from './interface';
 import { BigNumber, Wallet } from '@ijstech/eth-wallet';
 import { formatNumber, isWalletAddress, SupportedNetworks } from './utils';
-import ScomNetworkPicker, { INetworkConfig } from '@scom/scom-network-picker';
+import ScomNetworkPicker from '@scom/scom-network-picker';
 import { customStyle, tableStyle } from './index.css'
 const Theme = Styles.Theme.ThemeVars;
 

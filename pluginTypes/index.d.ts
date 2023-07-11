@@ -5,6 +5,10 @@ declare module "@scom/scom-commission-fee-setup/interface.ts" {
         walletAddress: string;
         share: string;
     }
+    export interface INetworkConfig {
+        chainId: number;
+        chainName?: string;
+    }
 }
 /// <amd-module name="@scom/scom-commission-fee-setup/utils.ts" />
 declare module "@scom/scom-commission-fee-setup/utils.ts" {
@@ -24,8 +28,7 @@ declare module "@scom/scom-commission-fee-setup/index.css.ts" {
 /// <amd-module name="@scom/scom-commission-fee-setup" />
 declare module "@scom/scom-commission-fee-setup" {
     import { Module, ControlElement, Container } from '@ijstech/components';
-    import { ICommissionInfo } from "@scom/scom-commission-fee-setup/interface.ts";
-    import { INetworkConfig } from '@scom/scom-network-picker';
+    import { ICommissionInfo, INetworkConfig } from "@scom/scom-commission-fee-setup/interface.ts";
     interface ScomCommissionFeeElement extends ControlElement {
         commissions?: ICommissionInfo[];
         fee?: string;

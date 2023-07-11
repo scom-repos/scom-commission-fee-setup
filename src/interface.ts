@@ -3,3 +3,8 @@ export interface ICommissionInfo {
   walletAddress: string;
   share: string;
 }
+
+export interface INetworkConfig {
+  chainId: number;
+  chainName?: string;
+}
