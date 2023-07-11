@@ -113,8 +113,15 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                 await this.lbCommissionShare.ready();
             if (!this.tableCommissions.isConnected)
                 await this.tableCommissions.ready();
-            this.fee = this.getAttribute('fee', true, []);
-            this.commissions = this.getAttribute('commissions', true, []);
+            const fee = this.getAttribute('fee', true);
+            const commissions = this.getAttribute('commissions', true);
+            const networks = this.getAttribute('networks', true);
+            if (fee)
+                this.fee = fee;
+            if (commissions)
+                this.commissions = commissions;
+            if (networks)
+                this.networks = networks;
             this.toggleVisible();
             this.isReadyCallbackQueued = false;
             this.executeReadyCallback();
@@ -132,7 +139,7 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                     textAlign: 'left',
                     onRenderCell: function (source, columnData, rowData) {
                         var _a;
-                        const network = utils_1.SupportedNetworks.find(net => net.chainId === columnData);
+                        const network = this.networks.find(net => net.chainId === columnData);
                         if (!network)
                             return this.$render("i-panel", null);
                         const imgUrl = ((_a = eth_wallet_2.Wallet.getClientInstance().getNetworkInfo(columnData)) === null || _a === void 0 ? void 0 : _a.image) || '';
@@ -180,6 +187,11 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                             width: 14
                         });
                         icon.onClick = async (source) => {
+                            this.currentCommission = {
+                                walletAddress: rowData.walletAddress,
+                                chainId: rowData.chainId,
+                                share: ''
+                            };
                             this.networkPicker.setNetworkByChainId(rowData.chainId);
                             this.inputWalletAddress.value = rowData.walletAddress;
                             this.modalAddCommission.visible = true;
@@ -239,16 +251,16 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
         set fee(value) {
             this._fee = value !== null && value !== void 0 ? value : '0';
             if (this.lbCommissionShare)
-                this.lbCommissionShare.caption = `${(0, utils_1.formatNumber)(new eth_wallet_2.BigNumber(this.fee).times(100).toFixed(), 4)} %`;
+                this.lbCommissionShare.caption = `${(0, utils_1.formatNumber)(new eth_wallet_2.BigNumber(this._fee).times(100).toFixed(), 4)} %`;
         }
         get networks() {
             var _a;
-            return (_a = this._networks) !== null && _a !== void 0 ? _a : utils_1.SupportedNetworks;
+            return (_a = this._networks) !== null && _a !== void 0 ? _a : [];
         }
         set networks(value) {
-            this._networks = value !== null && value !== void 0 ? value : utils_1.SupportedNetworks;
+            this._networks = value !== null && value !== void 0 ? value : [];
             if (this.networkPicker)
-                this.networkPicker.networks = [...this.networks];
+                this.networkPicker.networks = this.networks;
         }
         onModalAddCommissionClosed() {
             this.networkPicker.clearNetwork();
@@ -259,12 +271,26 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
             this.modalAddCommission.visible = true;
         }
         async onConfirmCommissionClicked() {
-            var _a;
-            this.commissions.push({
-                chainId: (_a = this.networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId,
-                walletAddress: this.inputWalletAddress.value,
-                share: this.fee
-            });
+            var _a, _b;
+            const currentChainId = (_a = this.networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
+            const currentWalletAddress = this.inputWalletAddress.value;
+            if (this.currentCommission) {
+                const { chainId, walletAddress } = this.currentCommission;
+                const commission = this.commissions.find(com => com.chainId === chainId && com.walletAddress === walletAddress);
+                commission.chainId = currentChainId;
+                commission.walletAddress = currentWalletAddress;
+                this.currentCommission = null;
+            }
+            else {
+                const hasCommission = this.commissions.find(com => com.chainId === currentChainId && com.walletAddress === currentWalletAddress);
+                if (!hasCommission) {
+                    this.commissions.push({
+                        chainId: (_b = this.networkPicker.selectedNetwork) === null || _b === void 0 ? void 0 : _b.chainId,
+                        walletAddress: this.inputWalletAddress.value,
+                        share: this.fee
+                    });
+                }
+            }
             this.tableCommissions.data = this.commissions;
             this.toggleVisible();
             this.modalAddCommission.visible = false;
@@ -319,7 +345,7 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                     this.$render("i-hstack", { horizontalAlignment: "space-between", verticalAlignment: "center", gap: "4px" },
                         this.$render("i-hstack", { gap: "4px" },
                             this.$render("i-label", { caption: "Commission Fee: ", opacity: 0.6, font: { size: '1rem' } }),
-                            this.$render("i-label", { id: "lbCommissionShare", font: { size: '1rem' } }),
+                            this.$render("i-label", { id: "lbCommissionShare", font: { size: '1rem' }, caption: '0%' }),
                             this.$render("i-icon", { name: "question-circle", fill: Theme.background.modal, width: 20, height: 20, tooltip: { content: CommissionFeeTooltipText } })),
                         this.$render("i-button", { id: "btnAddWallet", caption: "Add Wallet", border: { radius: '58px' }, padding: { top: '0.3rem', bottom: '0.3rem', left: '1rem', right: '1rem' }, background: { color: Theme.colors.primary.main }, font: { color: Theme.colors.primary.contrastText, size: '0.75rem', weight: 400 }, visible: false, onClick: this.onAddCommissionClicked.bind(this) })),
                     this.$render("i-vstack", { id: "pnlEmptyWallet", border: { radius: '8px' }, background: { color: Theme.background.modal }, padding: { top: '1.875rem', bottom: '1.875rem', left: '1.563rem', right: '1.563rem' }, gap: "1.25rem", width: "100%", class: "text-center" },
@@ -338,7 +364,7 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                         this.$render("i-hstack", { width: '100%', horizontalAlignment: 'center', grid: { area: 'title' }, margin: { bottom: '1.5rem' } },
                             this.$render("i-label", { caption: "Add Wallet", font: { size: '1.5rem' } })),
                         this.$render("i-label", { caption: "Network", grid: { area: 'lbNetwork' }, font: { size: '1rem' } }),
-                        this.$render("i-scom-network-picker", { id: 'networkPicker', grid: { area: 'network' }, display: "block", type: 'combobox', networks: utils_1.SupportedNetworks, background: { color: Theme.combobox.background }, border: { radius: 8, width: '1px', style: 'solid', color: Theme.input.background }, onCustomNetworkSelected: this.onNetworkSelected, class: "nft-network-select" }),
+                        this.$render("i-scom-network-picker", { id: 'networkPicker', grid: { area: 'network' }, display: "block", type: 'combobox', background: { color: Theme.combobox.background }, border: { radius: 8, width: '1px', style: 'solid', color: Theme.input.background }, onCustomNetworkSelected: this.onNetworkSelected, class: "nft-network-select" }),
                         this.$render("i-label", { caption: "Wallet Address", grid: { area: 'lbWalletAddress' }, font: { size: '1rem' } }),
                         this.$render("i-input", { id: 'inputWalletAddress', grid: { area: 'walletAddress' }, width: '100%', height: 45, border: { radius: 8, width: '1px', style: 'solid', color: Theme.divider }, onChanged: this.onInputWalletAddressChanged }),
                         this.$render("i-label", { id: 'lbErrMsg', font: { color: '#ed5748' }, grid: { area: 'errMsg' } }),

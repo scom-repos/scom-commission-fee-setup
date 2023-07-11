@@ -50,12 +50,13 @@ declare module "@scom/scom-commission-fee-setup" {
         private lbCommissionShare;
         private btnAddWallet;
         private pnlEmptyWallet;
+        private btnConfirm;
+        private lbErrMsg;
         private _commissions;
         private _fee;
         private _networks;
+        private currentCommission;
         private commissionsTableColumns;
-        private btnConfirm;
-        private lbErrMsg;
         onChanged: (data: any) => Promise<void>;
         init(): Promise<void>;
         constructor(parent?: Container, options?: any);

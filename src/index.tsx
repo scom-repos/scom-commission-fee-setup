@@ -18,7 +18,7 @@ import {
 import {} from '@ijstech/eth-contract';
 import { ICommissionInfo, INetworkConfig } from './interface';
 import { BigNumber, Wallet } from '@ijstech/eth-wallet';
-import { formatNumber, isWalletAddress, SupportedNetworks } from './utils';
+import { formatNumber, isWalletAddress } from './utils';
 import ScomNetworkPicker from '@scom/scom-network-picker';
 import { customStyle, tableStyle } from './index.css'
 const Theme = Styles.Theme.ThemeVars;
@@ -50,10 +50,13 @@ export default class ScomCommissionFeeSetup extends Module {
   private lbCommissionShare: Label;
   private btnAddWallet: Button;
   private pnlEmptyWallet: VStack;
+  private btnConfirm: Button;
+  private lbErrMsg: Label;
 
   private _commissions: ICommissionInfo[] = [];
   private _fee: string = '0';
   private _networks: INetworkConfig[] = [];
+  private currentCommission: ICommissionInfo;
   private commissionsTableColumns = [
     {
       title: 'Network',
@@ -61,7 +64,7 @@ export default class ScomCommissionFeeSetup extends Module {
       key: 'chainId',
       textAlign: 'left' as any,
       onRenderCell: function (source: Control, columnData: number, rowData: any) {
-        const network = SupportedNetworks.find(net => net.chainId === columnData)
+        const network = this.networks.find(net => net.chainId === columnData)
         if (!network) return <i-panel></i-panel>
         const imgUrl = Wallet.getClientInstance().getNetworkInfo(columnData)?.image || ''
         const hstack = new HStack(undefined, {
@@ -108,6 +111,11 @@ export default class ScomCommissionFeeSetup extends Module {
           width: 14
         })
         icon.onClick = async (source: Control) => {
+          this.currentCommission = {
+            walletAddress: rowData.walletAddress,
+            chainId: rowData.chainId,
+            share: ''
+          }
           this.networkPicker.setNetworkByChainId(rowData.chainId);
           this.inputWalletAddress.value = rowData.walletAddress;
           this.modalAddCommission.visible = true;
@@ -143,8 +151,7 @@ export default class ScomCommissionFeeSetup extends Module {
       }
     }
   ]
-  private btnConfirm: Button;
-  private lbErrMsg: Label;
+
   onChanged: (data: any) => Promise<void>
 
   async init() {
@@ -152,8 +159,12 @@ export default class ScomCommissionFeeSetup extends Module {
     super.init();
     if (!this.lbCommissionShare.isConnected) await this.lbCommissionShare.ready();
     if (!this.tableCommissions.isConnected) await this.tableCommissions.ready();
-    this.fee = this.getAttribute('fee', true, []);
-    this.commissions = this.getAttribute('commissions', true, []);
+    const fee = this.getAttribute('fee', true);
+    const commissions = this.getAttribute('commissions', true);
+    const networks = this.getAttribute('networks', true);
+    if (fee) this.fee = fee;
+    if (commissions) this.commissions = commissions;
+    if (networks) this.networks = networks;
     this.toggleVisible();
     this.isReadyCallbackQueued = false;
     this.executeReadyCallback();
@@ -185,14 +196,14 @@ export default class ScomCommissionFeeSetup extends Module {
   set fee(value: string) {
     this._fee = value ?? '0';
     if (this.lbCommissionShare)
-      this.lbCommissionShare.caption = `${formatNumber(new BigNumber(this.fee).times(100).toFixed(), 4)} %`;
+      this.lbCommissionShare.caption = `${formatNumber(new BigNumber(this._fee).times(100).toFixed(), 4)} %`;
   }
 
   get networks(): INetworkConfig[] {
-    return this._networks ?? SupportedNetworks;
+    return this._networks ?? [];
   }
   set networks(value: INetworkConfig[]) {
-    this._networks = value ?? SupportedNetworks;
+    this._networks = value ?? [];
     if (this.networkPicker)
       this.networkPicker.networks = [...this.networks];
   }
@@ -208,15 +219,27 @@ export default class ScomCommissionFeeSetup extends Module {
   }
 
   private async onConfirmCommissionClicked() {
-    this.commissions.push({
-      chainId: this.networkPicker.selectedNetwork?.chainId,
-      walletAddress: this.inputWalletAddress.value,
-      share: this.fee
-    })
+    const currentChainId = this.networkPicker.selectedNetwork?.chainId;
+    const currentWalletAddress = this.inputWalletAddress.value;
+    if (this.currentCommission) {
+      const { chainId, walletAddress } = this.currentCommission;
+      const commission = this.commissions.find(com => com.chainId === chainId && com.walletAddress === walletAddress);
+      commission.chainId = currentChainId;
+      commission.walletAddress = currentWalletAddress;
+      this.currentCommission = null;
+    } else {
+      const hasCommission = this.commissions.find(com => com.chainId === currentChainId && com.walletAddress === currentWalletAddress);
+      if (!hasCommission) {
+        this.commissions.push({
+          chainId: this.networkPicker.selectedNetwork?.chainId,
+          walletAddress: this.inputWalletAddress.value,
+          share: this.fee
+        })
+      }
+    }
     this.tableCommissions.data = this.commissions;
     this.toggleVisible();
     this.modalAddCommission.visible = false;
-
     if (this.onChanged) await this.onChanged({commissions: this.commissions})
   }
 
@@ -275,7 +298,7 @@ export default class ScomCommissionFeeSetup extends Module {
           >
             <i-hstack gap="4px">
               <i-label caption="Commission Fee: " opacity={0.6} font={{ size: '1rem' }}></i-label>
-              <i-label id="lbCommissionShare" font={{ size: '1rem' }}></i-label>
+              <i-label id="lbCommissionShare" font={{ size: '1rem' }} caption='0%'></i-label>
               <i-icon name="question-circle" fill={Theme.background.modal} width={20} height={20} tooltip={{content: CommissionFeeTooltipText}}></i-icon>
             </i-hstack>
             <i-button
@@ -344,7 +367,6 @@ export default class ScomCommissionFeeSetup extends Module {
               grid={{ area: 'network' }}
               display="block"
               type='combobox'
-              networks={SupportedNetworks}
               background={{color: Theme.combobox.background}}
               border={{radius: 8, width: '1px', style: 'solid', color: Theme.input.background}}
               onCustomNetworkSelected={this.onNetworkSelected}
