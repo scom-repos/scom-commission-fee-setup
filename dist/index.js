@@ -137,7 +137,7 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                     fieldName: 'chainId',
                     key: 'chainId',
                     textAlign: 'left',
-                    onRenderCell: function (source, columnData, rowData) {
+                    onRenderCell: (source, columnData, rowData) => {
                         var _a;
                         const network = this.networks.find(net => net.chainId === columnData);
                         if (!network)
@@ -260,7 +260,7 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
         set networks(value) {
             this._networks = value !== null && value !== void 0 ? value : [];
             if (this.networkPicker)
-                this.networkPicker.networks = this.networks;
+                this.networkPicker.networks = [...this.networks];
         }
         onModalAddCommissionClosed() {
             this.networkPicker.clearNetwork();

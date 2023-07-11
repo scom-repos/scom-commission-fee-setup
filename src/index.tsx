@@ -63,7 +63,7 @@ export default class ScomCommissionFeeSetup extends Module {
       fieldName: 'chainId',
       key: 'chainId',
       textAlign: 'left' as any,
-      onRenderCell: function (source: Control, columnData: number, rowData: any) {
+      onRenderCell: (source: Control, columnData: number, rowData: any) => {
         const network = this.networks.find(net => net.chainId === columnData)
         if (!network) return <i-panel></i-panel>
         const imgUrl = Wallet.getClientInstance().getNetworkInfo(columnData)?.image || ''
