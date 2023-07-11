@@ -122,16 +122,16 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                 this.commissions = commissions;
             if (networks)
                 this.networks = networks;
+            this.setTableColumns();
             this.toggleVisible();
             this.isReadyCallbackQueued = false;
             this.executeReadyCallback();
         }
-        constructor(parent, options) {
-            super(parent, options);
-            this._commissions = [];
-            this._fee = '0';
-            this._networks = [];
-            this.commissionsTableColumns = [
+        setTableColumns() {
+            console.log(this.networks);
+            if (!this.tableCommissions)
+                return;
+            this.tableCommissions.columns = [
                 {
                     title: 'Network',
                     fieldName: 'chainId',
@@ -228,6 +228,12 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                     }
                 }
             ];
+        }
+        constructor(parent, options) {
+            super(parent, options);
+            this._commissions = [];
+            this._fee = '0';
+            this._networks = [];
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -352,7 +358,7 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
                         this.$render("i-label", { caption: "To receive commission fee please add your wallet address", font: { size: '1rem' } }),
                         this.$render("i-panel", null,
                             this.$render("i-button", { caption: "Add Wallet", border: { radius: '58px' }, padding: { top: '0.75rem', bottom: '0.75rem', left: '2.5rem', right: '2.5rem' }, background: { color: Theme.colors.primary.main }, font: { color: Theme.colors.primary.contrastText, size: '0.875rem', weight: 400 }, onClick: this.onAddCommissionClicked.bind(this) })))),
-                this.$render("i-table", { id: 'tableCommissions', visible: false, columns: this.commissionsTableColumns, class: index_css_1.tableStyle }),
+                this.$render("i-table", { id: 'tableCommissions', visible: false, class: index_css_1.tableStyle }),
                 this.$render("i-modal", { id: 'modalAddCommission', maxWidth: '600px', closeIcon: { name: 'times-circle' }, onClose: this.onModalAddCommissionClosed },
                     this.$render("i-grid-layout", { width: '100%', verticalAlignment: 'center', gap: { row: '1rem' }, padding: { top: '1rem', bottom: '1rem', left: '2rem', right: '2rem' }, templateColumns: ['1fr', '3fr'], templateRows: ['auto', 'auto', 'auto', 'auto'], templateAreas: [
                             ['title', 'title'],
