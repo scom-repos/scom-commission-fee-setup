@@ -56,9 +56,9 @@ declare module "@scom/scom-commission-fee-setup" {
         private _fee;
         private _networks;
         private currentCommission;
-        private commissionsTableColumns;
         onChanged: (data: any) => Promise<void>;
         init(): Promise<void>;
+        private setTableColumns;
         constructor(parent?: Container, options?: any);
         static create(options?: ScomCommissionFeeElement, parent?: Container): Promise<ScomCommissionFeeSetup>;
         get commissions(): ICommissionInfo[];

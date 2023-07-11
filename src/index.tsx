@@ -57,100 +57,6 @@ export default class ScomCommissionFeeSetup extends Module {
   private _fee: string = '0';
   private _networks: INetworkConfig[] = [];
   private currentCommission: ICommissionInfo;
-  private commissionsTableColumns = [
-    {
-      title: 'Network',
-      fieldName: 'chainId',
-      key: 'chainId',
-      textAlign: 'left' as any,
-      onRenderCell: (source: Control, columnData: number, rowData: any) => {
-        const network = this.networks.find(net => net.chainId === columnData)
-        if (!network) return <i-panel></i-panel>
-        const imgUrl = Wallet.getClientInstance().getNetworkInfo(columnData)?.image || ''
-        const hstack = new HStack(undefined, {
-          verticalAlignment: 'center',
-          gap: 5
-        })
-        const imgEl = new Icon(hstack, {
-          image: {url: imgUrl, width: 16, height: 16}
-        })
-        const lbName = new Label(hstack, {
-          caption: network.chainName || '',
-          font: {size: '0.875rem'}
-        })
-        hstack.append(imgEl, lbName);
-        return hstack;
-      }
-    },
-    {
-      title: 'Wallet',
-      fieldName: 'walletAddress',
-      key: 'walletAddress',
-      onRenderCell: function (source: Control, columnData: string, rowData: any) {
-        const replaced = columnData.slice(6, columnData.length - 9)
-        const caption = (columnData?.length < 15) ? columnData : columnData.replace(replaced, '...')
-        return new Label(undefined, {
-          caption: caption || '',
-          font: {size: '0.875rem'},
-          tooltip: {
-            content: columnData
-          }
-        })
-      }
-    },
-    {
-      title: '',
-      fieldName: '',
-      key: '',
-      textAlign: 'center' as any,
-      onRenderCell: async (source: Control, data: any, rowData: any) => {
-        const icon = new Icon(undefined, {
-          name: "edit",
-          fill: Theme.text.primary,
-          height: 14,
-          width: 14
-        })
-        icon.onClick = async (source: Control) => {
-          this.currentCommission = {
-            walletAddress: rowData.walletAddress,
-            chainId: rowData.chainId,
-            share: ''
-          }
-          this.networkPicker.setNetworkByChainId(rowData.chainId);
-          this.inputWalletAddress.value = rowData.walletAddress;
-          this.modalAddCommission.visible = true;
-        }
-        icon.classList.add('pointer')
-        return icon;
-      }
-    },
-    {
-      title: '',
-      fieldName: '',
-      key: '',
-      textAlign: 'center' as any,
-      onRenderCell: async (source: Control, data: any, rowData: any) => {
-        const icon = new Icon(undefined, {
-          name: "times",
-          fill: Theme.colors.primary.main,
-          height: 14,
-          width: 14
-        })
-        icon.onClick = async (source: Control) => {
-          const index = this.commissions.findIndex(v => v.walletAddress == rowData.walletAddress && v.chainId == rowData.chainId);
-          if (index >= 0) {
-            this.commissions.splice(index, 1);
-            if (this.tableCommissions)
-              this.tableCommissions.data = this.commissions;
-            this.toggleVisible();
-            if (this.onChanged) await this.onChanged({commissions: this.commissions})
-          }
-        }
-        icon.classList.add('pointer')
-        return icon;
-      }
-    }
-  ]
 
   onChanged: (data: any) => Promise<void>
 
@@ -165,9 +71,109 @@ export default class ScomCommissionFeeSetup extends Module {
     if (fee) this.fee = fee;
     if (commissions) this.commissions = commissions;
     if (networks) this.networks = networks;
+    this.setTableColumns();
     this.toggleVisible();
     this.isReadyCallbackQueued = false;
     this.executeReadyCallback();
+  }
+
+  private setTableColumns() {
+    console.log(this.networks)
+    if (!this.tableCommissions) return;
+    this.tableCommissions.columns = [
+      {
+        title: 'Network',
+        fieldName: 'chainId',
+        key: 'chainId',
+        textAlign: 'left' as any,
+        onRenderCell: (source: Control, columnData: number, rowData: any) => {
+          const network = this.networks.find(net => net.chainId === columnData)
+          if (!network) return <i-panel></i-panel>
+          const imgUrl = Wallet.getClientInstance().getNetworkInfo(columnData)?.image || ''
+          const hstack = new HStack(undefined, {
+            verticalAlignment: 'center',
+            gap: 5
+          })
+          const imgEl = new Icon(hstack, {
+            image: {url: imgUrl, width: 16, height: 16}
+          })
+          const lbName = new Label(hstack, {
+            caption: network.chainName || '',
+            font: {size: '0.875rem'}
+          })
+          hstack.append(imgEl, lbName);
+          return hstack;
+        }
+      },
+      {
+        title: 'Wallet',
+        fieldName: 'walletAddress',
+        key: 'walletAddress',
+        onRenderCell: function (source: Control, columnData: string, rowData: any) {
+          const replaced = columnData.slice(6, columnData.length - 9)
+          const caption = (columnData?.length < 15) ? columnData : columnData.replace(replaced, '...')
+          return new Label(undefined, {
+            caption: caption || '',
+            font: {size: '0.875rem'},
+            tooltip: {
+              content: columnData
+            }
+          })
+        }
+      },
+      {
+        title: '',
+        fieldName: '',
+        key: '',
+        textAlign: 'center' as any,
+        onRenderCell: async (source: Control, data: any, rowData: any) => {
+          const icon = new Icon(undefined, {
+            name: "edit",
+            fill: Theme.text.primary,
+            height: 14,
+            width: 14
+          })
+          icon.onClick = async (source: Control) => {
+            this.currentCommission = {
+              walletAddress: rowData.walletAddress,
+              chainId: rowData.chainId,
+              share: ''
+            }
+            this.networkPicker.setNetworkByChainId(rowData.chainId);
+            this.inputWalletAddress.value = rowData.walletAddress;
+            this.modalAddCommission.visible = true;
+          }
+          icon.classList.add('pointer')
+          return icon;
+        }
+      },
+      {
+        title: '',
+        fieldName: '',
+        key: '',
+        textAlign: 'center' as any,
+        onRenderCell: async (source: Control, data: any, rowData: any) => {
+          const icon = new Icon(undefined, {
+            name: "times",
+            fill: Theme.colors.primary.main,
+            height: 14,
+            width: 14
+          })
+          icon.onClick = async (source: Control) => {
+            const index = this.commissions.findIndex(v => v.walletAddress == rowData.walletAddress && v.chainId == rowData.chainId);
+            if (index >= 0) {
+              this.commissions.splice(index, 1);
+              if (this.tableCommissions)
+                this.tableCommissions.data = this.commissions;
+              this.toggleVisible();
+              if (this.onChanged) await this.onChanged({commissions: this.commissions})
+            }
+          }
+          icon.classList.add('pointer')
+          return icon;
+        }
+      }
+    ]
   }
 
   constructor(parent?: Container, options?: any) {
@@ -336,7 +342,6 @@ export default class ScomCommissionFeeSetup extends Module {
         <i-table
           id='tableCommissions'
           visible={false}
-          columns={this.commissionsTableColumns}
           class={tableStyle}
         ></i-table>
         <i-modal
