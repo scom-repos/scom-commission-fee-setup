@@ -128,7 +128,6 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
             this.executeReadyCallback();
         }
         setTableColumns() {
-            console.log(this.networks);
             if (!this.tableCommissions)
                 return;
             this.tableCommissions.columns = [
@@ -272,6 +271,7 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
             this.networkPicker.clearNetwork();
             this.inputWalletAddress.value = '';
             this.lbErrMsg.caption = '';
+            this.btnConfirm.enabled = false;
         }
         onAddCommissionClicked() {
             this.modalAddCommission.visible = true;
@@ -280,6 +280,8 @@ define("@scom/scom-commission-fee-setup", ["require", "exports", "@ijstech/compo
             var _a, _b;
             const currentChainId = (_a = this.networkPicker.selectedNetwork) === null || _a === void 0 ? void 0 : _a.chainId;
             const currentWalletAddress = this.inputWalletAddress.value;
+            if (!currentChainId && !currentWalletAddress)
+                return;
             if (this.currentCommission) {
                 const { chainId, walletAddress } = this.currentCommission;
                 const commission = this.commissions.find(com => com.chainId === chainId && com.walletAddress === walletAddress);
