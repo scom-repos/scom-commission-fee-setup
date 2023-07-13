@@ -78,7 +78,6 @@ export default class ScomCommissionFeeSetup extends Module {
   }
 
   private setTableColumns() {
-    console.log(this.networks)
     if (!this.tableCommissions) return;
     this.tableCommissions.columns = [
       {
@@ -218,6 +217,7 @@ export default class ScomCommissionFeeSetup extends Module {
     this.networkPicker.clearNetwork();
     this.inputWalletAddress.value = '';
     this.lbErrMsg.caption = '';
+    this.btnConfirm.enabled = false;
   }
 
   private onAddCommissionClicked() {
@@ -227,6 +227,7 @@ export default class ScomCommissionFeeSetup extends Module {
   private async onConfirmCommissionClicked() {
     const currentChainId = this.networkPicker.selectedNetwork?.chainId;
     const currentWalletAddress = this.inputWalletAddress.value;
+    if (!currentChainId && !currentWalletAddress) return;
     if (this.currentCommission) {
       const { chainId, walletAddress } = this.currentCommission;
       const commission = this.commissions.find(com => com.chainId === chainId && com.walletAddress === walletAddress);
